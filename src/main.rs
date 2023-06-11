@@ -16,10 +16,9 @@ use cuda_sys::{
     },
 };
 use cusolver::{
-    cudaDataType_t::CUDA_R_64F, cusolverDnHandle_t, cusolverEigMode_t::CUSOLVER_EIG_MODE_VECTOR,
+    cudaDataType_t::CUDA_R_64F, cusolverDnCreate, cusolverDnDestroy, cusolverDnHandle_t,
+    cusolverEigMode_t::CUSOLVER_EIG_MODE_VECTOR,
 };
-
-use crate::cusolver::{cusolverDnCreate, cusolverDnDestroy};
 
 #[link(name = "my_kernel", kind = "static")]
 extern "C" {
@@ -207,15 +206,6 @@ fn main() {
 
         cu_add(a.0, c.0, (m * m) as _);
 
-        let mut c_: Vec<f64> = vec![zero; m * m];
-        cudaMemcpy(
-            c_.as_mut_ptr() as _,
-            c.0 as _,
-            c_.len() * size_of::<f64>(),
-            cudaMemcpyKind_cudaMemcpyDeviceToHost,
-        );
-        println!("{:?}", c_);
-
         let mut handle_s: cusolverDnHandle_t = std::ptr::null_mut();
         cusolverDnCreate(&mut handle_s as *mut _);
 
@@ -268,5 +258,12 @@ fn main() {
             cudaMemcpyKind_cudaMemcpyDeviceToHost,
         );
         println!("{:?}", c_);
+
+        free!(a);
+        free!(b);
+        free!(c);
+        free!(u);
+        free!(s);
+        free!(vt);
     }
 }
